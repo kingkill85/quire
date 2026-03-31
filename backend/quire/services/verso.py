@@ -18,6 +18,25 @@ class VersoClient:
         except httpx.HTTPError:
             return False
 
+    async def login(self, email: str, password: str) -> dict[str, Any]:
+        resp = await self._client.post(
+            "/trpc/auth.login",
+            json={"json": {"email": email, "password": password}},
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        # tRPC wraps mutation results: { result: { data: { json: ... } } }
+        # But the exact nesting can vary — handle both
+        if "result" in data:
+            inner = data["result"]
+            if "data" in inner:
+                inner = inner["data"]
+                if "json" in inner:
+                    return inner["json"]
+                return inner
+            return inner
+        return data
+
     async def upload_book(
         self, file_content: bytes, filename: str, token: str
     ) -> dict[str, Any]:
@@ -29,15 +48,6 @@ class VersoClient:
         )
         resp.raise_for_status()
         return resp.json()
-
-    async def login(self, email: str, password: str) -> dict[str, Any]:
-        resp = await self._client.post(
-            "/trpc/auth.login",
-            json={"json": {"email": email, "password": password}},
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        return data["result"]["data"]["json"]
 
     async def close(self):
         await self._client.aclose()
