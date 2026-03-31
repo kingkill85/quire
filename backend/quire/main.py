@@ -8,6 +8,7 @@ from quire.config import settings
 from quire.routes.download import router as download_router
 from quire.routes.search import router as search_router
 from quire.routes.sources import router as sources_router
+from quire.services.cf_bypass import ExternalBypass, InternalBypass, NoBypass
 from quire.services.download_queue import DownloadQueue
 from quire.services.verso import VersoClient
 from quire.sources.setup import create_registry
@@ -25,6 +26,12 @@ async def lifespan(app: FastAPI):
     app.state.download_queue = DownloadQueue(
         max_concurrent=settings.max_concurrent_downloads,
     )
+    if settings.cf_bypass == "external":
+        app.state.cf_bypass = ExternalBypass(flaresolverr_url=settings.flaresolverr_url)
+    elif settings.cf_bypass == "internal":
+        app.state.cf_bypass = InternalBypass()
+    else:
+        app.state.cf_bypass = NoBypass()
     yield
     await app.state.verso.close()
 
