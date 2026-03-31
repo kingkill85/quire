@@ -1,6 +1,6 @@
 import asyncio
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Header, Request
 from pydantic import BaseModel
 
 from quire.services.download_queue import DownloadQueue, DownloadStatus
@@ -16,10 +16,17 @@ class DownloadRequest(BaseModel):
 
 
 @router.post("/api/download")
-async def start_download(request: Request, body: DownloadRequest):
+async def start_download(
+    request: Request,
+    body: DownloadRequest,
+    authorization: str = Header(...),
+):
     queue: DownloadQueue = request.app.state.download_queue
     sources = request.app.state.sources
     verso = request.app.state.verso
+
+    # Extract Bearer token
+    token = authorization.removeprefix("Bearer ").strip()
 
     source = sources.get(body.source)
     if not source:
@@ -32,7 +39,9 @@ async def start_download(request: Request, body: DownloadRequest):
         author=body.author,
     )
 
-    asyncio.create_task(_download_and_upload(queue, source, verso, item.id))
+    asyncio.create_task(
+        _download_and_upload(queue, source, verso, item.id, token)
+    )
 
     return {"item": item.to_dict()}
 
@@ -60,7 +69,7 @@ async def cancel_download(request: Request, item_id: str):
     return {"status": "cancelled"}
 
 
-async def _download_and_upload(queue, source, verso, item_id: str):
+async def _download_and_upload(queue, source, verso, item_id: str, token: str):
     try:
         item = queue.get(item_id)
         if not item or item.status == DownloadStatus.CANCELLED:
@@ -71,7 +80,7 @@ async def _download_and_upload(queue, source, verso, item_id: str):
         queue.update_status(item_id, DownloadStatus.DOWNLOADING, progress=100.0)
 
         queue.update_status(item_id, DownloadStatus.UPLOADING)
-        result = await verso.upload_book(file_content, filename)
+        result = await verso.upload_book(file_content, filename, token)
         verso_book_id = result.get("book", {}).get("id")
 
         queue.update_status(

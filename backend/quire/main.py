@@ -20,11 +20,7 @@ from quire.sources.setup import create_registry
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Path(settings.temp_dir).mkdir(parents=True, exist_ok=True)
-    app.state.verso = VersoClient(
-        base_url=settings.verso_url,
-        email=settings.verso_app_password_email,
-        app_password=settings.verso_app_password,
-    )
+    app.state.verso = VersoClient(base_url=settings.verso_url)
     app.state.sources = create_registry()
     app.state.download_queue = DownloadQueue(
         max_concurrent=settings.max_concurrent_downloads,
@@ -63,6 +59,11 @@ async def health():
         "verso": "connected" if verso_ok else "unreachable",
         "sources": app.state.sources.list_sources(),
     }
+
+
+@app.get("/api/config")
+async def config():
+    return {"verso_url": settings.verso_url}
 
 
 # Serve frontend in production (when dist exists)

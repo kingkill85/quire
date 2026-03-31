@@ -20,3 +20,14 @@ def test_health():
     data = response.json()
     assert data["status"] == "ok"
     assert data["verso"] == "connected"
+
+
+def test_config():
+    app.state.verso = FakeVerso()
+    app.state.sources = SourceRegistry()
+    app.state.download_queue = DownloadQueue(max_concurrent=2)
+    client = TestClient(app)
+    response = client.get("/api/config")
+    assert response.status_code == 200
+    data = response.json()
+    assert "verso_url" in data

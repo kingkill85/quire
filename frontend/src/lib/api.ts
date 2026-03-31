@@ -26,6 +26,42 @@ export interface DownloadItem {
   created_at: string;
 }
 
+export interface AuthState {
+  accessToken: string;
+  refreshToken: string;
+  user: { email: string; displayName: string; role: string };
+}
+
+let versoUrl = "";
+
+export async function getVersoUrl(): Promise<string> {
+  if (versoUrl) return versoUrl;
+  const resp = await fetch("/api/config");
+  const data = await resp.json();
+  versoUrl = data.verso_url;
+  return versoUrl;
+}
+
+export async function loginToVerso(
+  email: string,
+  password: string,
+): Promise<AuthState> {
+  const url = await getVersoUrl();
+  const resp = await fetch(`${url}/trpc/auth.login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ json: { email, password } }),
+  });
+  if (!resp.ok) throw new Error("Login failed");
+  const data = await resp.json();
+  const result = data.result.data.json;
+  return {
+    accessToken: result.accessToken,
+    refreshToken: result.refreshToken,
+    user: result.user,
+  };
+}
+
 export async function searchBooks(
   query: string,
   sources?: string,
@@ -37,10 +73,16 @@ export async function searchBooks(
   return resp.json();
 }
 
-export async function startDownload(result: SearchResult): Promise<DownloadItem> {
+export async function startDownload(
+  result: SearchResult,
+  token: string,
+): Promise<DownloadItem> {
   const resp = await fetch("/api/download", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({
       source: result.source,
       url: result.url,

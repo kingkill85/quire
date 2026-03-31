@@ -6,8 +6,6 @@ class Settings(BaseSettings):
 
     # Verso connection
     verso_url: str = "http://localhost:3000"
-    verso_app_password_email: str = ""
-    verso_app_password: str = ""
 
     # Server
     host: str = "0.0.0.0"

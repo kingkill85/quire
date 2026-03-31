@@ -5,11 +5,7 @@ from quire.services.verso import VersoClient
 
 @pytest.fixture
 def verso_client():
-    return VersoClient(
-        base_url="http://verso:3000",
-        email="admin@test.com",
-        app_password="test-password",
-    )
+    return VersoClient(base_url="http://verso:3000")
 
 
 @pytest.mark.asyncio
@@ -39,18 +35,9 @@ async def test_upload_book(verso_client, httpx_mock):
     result = await verso_client.upload_book(
         file_content=b"fake-epub-content",
         filename="test.epub",
+        token="test-jwt-token",
     )
     assert result["book"]["id"] == "abc-123"
 
     request = httpx_mock.get_request()
-    assert request.headers["authorization"].startswith("Basic ")
-
-
-@pytest.mark.asyncio
-async def test_get_books(verso_client, httpx_mock):
-    httpx_mock.add_response(
-        url="http://verso:3000/trpc/books.list",
-        json={"result": {"data": {"json": {"books": [], "total": 0}}}},
-    )
-    result = await verso_client.get_books()
-    assert result["books"] == []
+    assert request.headers["authorization"] == "Bearer test-jwt-token"
