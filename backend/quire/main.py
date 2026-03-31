@@ -67,8 +67,17 @@ async def config():
 
 
 # Serve frontend in production (when dist exists)
-_frontend_dist = os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist")
-if os.path.isdir(_frontend_dist):
+# In Docker: /app/quire/main.py -> ../frontend/dist = /app/frontend/dist
+# In dev:    backend/quire/main.py -> ../../frontend/dist
+_frontend_dist = None
+for _candidate in [
+    os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"),
+    os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist"),
+]:
+    if os.path.isdir(_candidate):
+        _frontend_dist = _candidate
+        break
+if _frontend_dist:
     _assets_dir = os.path.join(_frontend_dist, "assets")
     if os.path.isdir(_assets_dir):
         app.mount("/assets", StaticFiles(directory=_assets_dir), name="assets")
