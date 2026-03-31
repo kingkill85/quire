@@ -5,7 +5,8 @@ class Settings(BaseSettings):
     model_config = {"env_prefix": "QUIRE_"}
 
     # Verso connection
-    verso_url: str = "http://localhost:3000"
+    verso_url: str = "http://localhost:3000"  # internal, backend-to-backend
+    verso_public_url: str = ""  # public URL for frontend login (e.g. https://verso.kingkill.org)
 
     # Server
     host: str = "0.0.0.0"

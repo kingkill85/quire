@@ -63,7 +63,7 @@ async def health():
 
 @app.get("/api/config")
 async def config():
-    return {"verso_url": settings.verso_url}
+    return {"verso_url": settings.verso_public_url or settings.verso_url}
 
 
 # Serve frontend in production (when dist exists)
