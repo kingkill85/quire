@@ -5,7 +5,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from quire.config import settings
+from quire.routes.download import router as download_router
+from quire.routes.search import router as search_router
+from quire.routes.sources import router as sources_router
+from quire.services.download_queue import DownloadQueue
 from quire.services.verso import VersoClient
+from quire.sources.setup import create_registry
 
 
 @asynccontextmanager
@@ -15,6 +20,10 @@ async def lifespan(app: FastAPI):
         base_url=settings.verso_url,
         email=settings.verso_app_password_email,
         app_password=settings.verso_app_password,
+    )
+    app.state.sources = create_registry()
+    app.state.download_queue = DownloadQueue(
+        max_concurrent=settings.max_concurrent_downloads,
     )
     yield
     await app.state.verso.close()
@@ -30,6 +39,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(search_router)
+app.include_router(download_router)
+app.include_router(sources_router)
+
 
 @app.get("/api/health")
 async def health():
@@ -38,4 +51,5 @@ async def health():
         "status": "ok" if verso_ok else "degraded",
         "version": "0.1.0",
         "verso": "connected" if verso_ok else "unreachable",
+        "sources": app.state.sources.list_sources(),
     }
