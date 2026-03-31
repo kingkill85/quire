@@ -3,7 +3,9 @@ from quire.services.download_queue import DownloadQueue, DownloadStatus
 
 def test_add_and_get_item():
     queue = DownloadQueue(max_concurrent=2)
-    item = queue.add(source="libgen", url="https://example.com/book", title="Test Book", author="Author")
+    item = queue.add(
+        source="libgen", url="https://example.com/book", title="Test Book", author="Author"
+    )
     assert item.status == DownloadStatus.QUEUED
     assert item.title == "Test Book"
     retrieved = queue.get(item.id)

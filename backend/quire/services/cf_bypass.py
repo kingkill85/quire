@@ -95,8 +95,8 @@ class InternalBypass(CfBypass):
             sb.activate_cdp_mode(url)
             sb.sleep(3)
 
-            page_source = sb.get_page_source()
-            if "just a moment" in page_source.lower() or "verify you are human" in page_source.lower():
+            page_source = sb.get_page_source().lower()
+            if "just a moment" in page_source or "verify you are human" in page_source:
                 try:
                     sb.cdp.click_if_visible("input[type='checkbox']")
                     sb.sleep(5)
