@@ -1,0 +1,20 @@
+services:
+  quire:
+    build:
+      context: .
+      target: lite
+    ports:
+      - "8085:8085"
+    environment:
+      QUIRE_VERSO_URL: http://verso:3000
+      QUIRE_VERSO_APP_PASSWORD_EMAIL: admin@example.com
+      QUIRE_VERSO_APP_PASSWORD: change-me
+      QUIRE_CF_BYPASS: external
+      QUIRE_FLARESOLVERR_URL: http://flaresolverr:8191/v1
+    restart: unless-stopped
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    environment:
+      LOG_LEVEL: info
+    restart: unless-stopped
