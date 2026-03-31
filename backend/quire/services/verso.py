@@ -21,19 +21,15 @@ class VersoClient:
     async def login(self, email: str, password: str) -> dict[str, Any]:
         resp = await self._client.post(
             "/trpc/auth.login",
-            json={"json": {"email": email, "password": password}},
+            json={"email": email, "password": password},
         )
         resp.raise_for_status()
         data = resp.json()
-        # tRPC wraps mutation results: { result: { data: { json: ... } } }
-        # But the exact nesting can vary — handle both
+        # tRPC response: { result: { data: ... } }
         if "result" in data:
             inner = data["result"]
             if "data" in inner:
-                inner = inner["data"]
-                if "json" in inner:
-                    return inner["json"]
-                return inner
+                return inner["data"]
             return inner
         return data
 
