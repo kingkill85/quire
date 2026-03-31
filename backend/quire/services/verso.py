@@ -30,5 +30,14 @@ class VersoClient:
         resp.raise_for_status()
         return resp.json()
 
+    async def login(self, email: str, password: str) -> dict[str, Any]:
+        resp = await self._client.post(
+            "/trpc/auth.login",
+            json={"json": {"email": email, "password": password}},
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return data["result"]["data"]["json"]
+
     async def close(self):
         await self._client.aclose()

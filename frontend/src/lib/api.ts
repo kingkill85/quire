@@ -32,34 +32,17 @@ export interface AuthState {
   user: { email: string; displayName: string; role: string };
 }
 
-let versoUrl = "";
-
-export async function getVersoUrl(): Promise<string> {
-  if (versoUrl) return versoUrl;
-  const resp = await fetch("/api/config");
-  const data = await resp.json();
-  versoUrl = data.verso_url;
-  return versoUrl;
-}
-
 export async function loginToVerso(
   email: string,
   password: string,
 ): Promise<AuthState> {
-  const url = await getVersoUrl();
-  const resp = await fetch(`${url}/trpc/auth.login`, {
+  const resp = await fetch("/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ json: { email, password } }),
+    body: JSON.stringify({ email, password }),
   });
   if (!resp.ok) throw new Error("Login failed");
-  const data = await resp.json();
-  const result = data.result.data.json;
-  return {
-    accessToken: result.accessToken,
-    refreshToken: result.refreshToken,
-    user: result.user,
-  };
+  return resp.json();
 }
 
 export async function searchBooks(

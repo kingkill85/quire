@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from quire.config import settings
+from quire.routes.auth import router as auth_router
 from quire.routes.download import router as download_router
 from quire.routes.search import router as search_router
 from quire.routes.sources import router as sources_router
@@ -45,6 +46,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router)
 app.include_router(search_router)
 app.include_router(download_router)
 app.include_router(sources_router)
